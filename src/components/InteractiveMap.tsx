@@ -24,11 +24,6 @@ const Polygon = dynamic(
   { ssr: false }
 );
 
-const useMap = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMap),
-  { ssr: false }
-);
-
 // Import Leaflet only on client side
 let L: any = null;
 if (typeof window !== 'undefined') {
@@ -50,13 +45,15 @@ interface DrawingLayerProps {
 }
 
 const DrawingLayer: React.FC<DrawingLayerProps> = ({ isDrawing, onPolygonComplete }) => {
-  const map = useMap();
   const drawingRef = useRef<any>(null);
   const pointsRef = useRef<Point[]>([]);
   const markersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (!map || !L) return;
+    if (!L || typeof window === 'undefined') return;
+
+    const map = (window as any).__mapRef;
+    if (!map) return;
 
     if (!isDrawing) {
       // Clear any existing drawing
@@ -133,7 +130,7 @@ const DrawingLayer: React.FC<DrawingLayerProps> = ({ isDrawing, onPolygonComplet
       document.removeEventListener('keydown', handleKeyPress);
       cancelDrawing();
     };
-  }, [isDrawing, map, onPolygonComplete]);
+  }, [isDrawing, onPolygonComplete]);
 
   return null;
 };
@@ -242,6 +239,12 @@ const InteractiveMap: React.FC = () => {
         zoom={mapState.zoom}
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
+        ref={(map) => {
+          if (map) {
+            // Store map reference for drawing layer
+            (window as any).__mapRef = map;
+          }
+        }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
