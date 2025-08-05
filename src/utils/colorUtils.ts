@@ -82,6 +82,6 @@ export const validateColorRule = (rule: ColorRule): boolean => {
     rule.value !== null &&
     !isNaN(rule.value) &&
     rule.color &&
-    Boolean(rule.color.match(/^#[0-9A-Fa-f]{6}$/))
+    rule.color.match(/^#[0-9A-Fa-f]{6}$/) !== null
   );
 }; 
