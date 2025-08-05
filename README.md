@@ -79,8 +79,8 @@ A comprehensive React/Next.js TypeScript dashboard application that visualizes d
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd dashboard-app
+git clone https://github.com/Abhirup2004-p/interactive-weather-dashboard-.git
+cd interactive-weather-dashboard-
 ```
 
 2. Install dependencies:
