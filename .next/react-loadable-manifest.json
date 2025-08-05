@@ -1,1 +1,15 @@
-{}
+{
+  "components\\InteractiveMap.tsx -> react-leaflet": {
+    "id": "components\\InteractiveMap.tsx -> react-leaflet",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_react-leaflet_lib_index_js.js"
+    ]
+  },
+  "components\\MapWrapper.tsx -> ./InteractiveMap": {
+    "id": "components\\MapWrapper.tsx -> ./InteractiveMap",
+    "files": [
+      "static/css/_app-pages-browser_src_components_InteractiveMap_tsx.css",
+      "static/chunks/_app-pages-browser_src_components_InteractiveMap_tsx.js"
+    ]
+  }
+}

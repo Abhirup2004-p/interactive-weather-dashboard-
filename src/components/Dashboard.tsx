@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { Layout } from 'antd';
 import TimelineSlider from './TimelineSlider';
-import InteractiveMap from './InteractiveMap';
+import MapWrapper from './MapWrapper';
 import DataSourceSidebar from './DataSourceSidebar';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { fetchWeatherDataForPolygon, getTemperatureForTimeRange } from '@/utils/api';
@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const updatePolygonColors = async () => {
       for (const polygon of mapState.polygons) {
-        const dataSource = dataSources.find(ds => ds.id === polygon.dataSource);
+        const dataSource = dataSources.find((ds: any) => ds.id === polygon.dataSource);
         if (!dataSource) continue;
 
         try {
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
       <Layout>
         <DataSourceSidebar />
         <Content style={{ padding: '16px' }}>
-          <InteractiveMap />
+          <MapWrapper />
         </Content>
       </Layout>
     </Layout>

@@ -1,22 +1,48 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
+import dynamic from 'next/dynamic';
 import { Button, Space, Modal, Select, message } from 'antd';
 import { useDashboardStore } from '@/store/dashboardStore';
-import { Point, Polygon as PolygonType } from '@/types';
-import 'leaflet/dist/leaflet.css';
+import { Point } from '@/types';
 
 const { Option } = Select;
 
-// Fix for Leaflet marker icons in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// Dynamically import Leaflet components to avoid SSR issues
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+
+const Polygon = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Polygon),
+  { ssr: false }
+);
+
+const useMap = dynamic(
+  () => import('react-leaflet').then((mod) => mod.useMap),
+  { ssr: false }
+);
+
+// Import Leaflet only on client side
+let L: any = null;
+if (typeof window !== 'undefined') {
+  L = require('leaflet');
+  require('leaflet/dist/leaflet.css');
+  
+  // Fix for Leaflet marker icons in Next.js
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+}
 
 interface DrawingLayerProps {
   isDrawing: boolean;
@@ -25,11 +51,13 @@ interface DrawingLayerProps {
 
 const DrawingLayer: React.FC<DrawingLayerProps> = ({ isDrawing, onPolygonComplete }) => {
   const map = useMap();
-  const drawingRef = useRef<L.Polygon | null>(null);
+  const drawingRef = useRef<any>(null);
   const pointsRef = useRef<Point[]>([]);
-  const markersRef = useRef<L.Marker[]>([]);
+  const markersRef = useRef<any[]>([]);
 
   useEffect(() => {
+    if (!map || !L) return;
+
     if (!isDrawing) {
       // Clear any existing drawing
       if (drawingRef.current) {
@@ -42,7 +70,7 @@ const DrawingLayer: React.FC<DrawingLayerProps> = ({ isDrawing, onPolygonComplet
       return;
     }
 
-    const handleMapClick = (e: L.LeafletMouseEvent) => {
+    const handleMapClick = (e: any) => {
       if (!isDrawing) return;
 
       const point: Point = { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -58,7 +86,7 @@ const DrawingLayer: React.FC<DrawingLayerProps> = ({ isDrawing, onPolygonComplet
       }
 
       if (pointsRef.current.length >= 3) {
-        drawingRef.current = L.polygon(pointsRef.current.map(p => [p.lat, p.lng]), {
+        drawingRef.current = L.polygon(pointsRef.current.map((p: Point) => [p.lat, p.lng]), {
           color: 'blue',
           fillColor: '#3388ff',
           fillOpacity: 0.3,
@@ -144,6 +172,11 @@ const InteractiveMap: React.FC = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [pendingPolygon, setPendingPolygon] = useState<Point[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handlePolygonComplete = (points: Point[]) => {
     setPendingPolygon(points);
@@ -184,6 +217,23 @@ const InteractiveMap: React.FC = () => {
     // Handle polygon selection if needed
     console.log('Polygon clicked:', polygonId);
   };
+
+  // Don't render map until client-side
+  if (!isClient) {
+    return (
+      <div style={{ 
+        position: 'relative', 
+        height: '600px', 
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5'
+      }}>
+        <div>Loading map...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'relative', height: '600px', width: '100%' }}>
